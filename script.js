@@ -11,8 +11,8 @@ const leaders = [
     "빅변기 연합(서로보듬어줘요)"
   ],
   [
-    "김상민그는감히전설이라고할수있다",
-    "김상민, 그는 감히 전설이라고 할 수 있다."
+    "김감전그는감히전설이라고할수있다",
+    "빅변기 참시자, 양홍원 동료, 스윙스아들, 서영이가 갠적으로 좀 조아함(키커서), 이번 기회에 서동현이랑 화해시켜주고 싶음 <이거 진짜 너무착해"
   ]
 ];
 const supporters = [
@@ -86,7 +86,7 @@ const supporters = [
   ],
   [
     [
-      "Seo In Young",
+      "서인영",
       "뻬미 전형, 동정심 전형"
     ]
   ],
@@ -142,7 +142,7 @@ const supporters = [
       "한동훈, 음잘알 전형"
     ],
     [
-      "DEX",
+      "덱스",
       "한준희 전형"
     ]
   ],
@@ -174,7 +174,7 @@ const supporters = [
   ],
   [
     [
-      "HERO JAEJOONG",
+      "영웅재중",
       "사생팬 관련 썰 전형, 대가리크기 전형. 같이 싸워줄 것 같음"
     ]
   ],
@@ -406,7 +406,7 @@ function buildRoster() {
   leaderBox.append(bigass);
 
   for (const entry of leaders) {
-    leaderBox.append(personLine(entry, number, entry[0] === "Swings" || entry[0] === "BIG Naughty" || entry[0] === "김상민그는감히전설이라고할수있다"));
+    leaderBox.append(personLine(entry, number, entry[0] === "Swings" || entry[0] === "BIG Naughty" || entry[0] === "김감전그는감히전설이라고할수있다"));
     notesBox.append(noteLine(entry, number));
     number++;
   }
@@ -425,7 +425,7 @@ const form = document.getElementById("name-form");
 const audio = document.getElementById("bg-music");
 const musicStart = 88; // 1 minute 28 seconds
 const fadeDuration = 3200; // 3.2 seconds
-const musicVolume = 0.48; // lower overall playback level on mobile and desktop
+const musicVolume = 0.30; // target playback volume, desktop and mobile
 let fadeFrame = null;
 let musicFadeStarted = false;
 
@@ -463,6 +463,58 @@ function playMusicFromStartPoint() {
 }
 
 buildRoster();
+
+// iOS Safari may pan the visual viewport when focusing a text field, even when
+// the body is fixed. Keep the intro at its pre-focus on-screen position by
+// compensating for visual-viewport panning (not by disabling user zoom).
+const nameInput = document.getElementById("visitor-name");
+const visualViewport = window.visualViewport;
+let introAnchorY = null;
+let introCompensation = 0;
+let introRepositionFrame = null;
+
+function introScreenTop() {
+  return intro.getBoundingClientRect().top - (visualViewport?.offsetTop || 0);
+}
+
+function captureIntroPosition() {
+  if (result.hidden && introAnchorY === null) {
+    introAnchorY = introScreenTop();
+  }
+}
+
+function holdIntroPosition() {
+  introRepositionFrame = null;
+  if (document.activeElement !== nameInput || introAnchorY === null || !result.hidden) return;
+  const difference = introAnchorY - introScreenTop();
+  if (Math.abs(difference) < 0.5) return;
+  introCompensation = Math.max(-400, Math.min(400, introCompensation + difference));
+  intro.style.setProperty("--intro-focus-offset", `${introCompensation}px`);
+}
+
+function scheduleIntroPosition() {
+  if (introRepositionFrame === null) {
+    introRepositionFrame = requestAnimationFrame(holdIntroPosition);
+  }
+}
+
+nameInput.addEventListener("pointerdown", captureIntroPosition, { passive: true });
+nameInput.addEventListener("touchstart", captureIntroPosition, { passive: true });
+nameInput.addEventListener("focus", () => {
+  captureIntroPosition();
+  scheduleIntroPosition();
+});
+nameInput.addEventListener("blur", () => {
+  introAnchorY = null;
+  introCompensation = 0;
+  intro.style.removeProperty("--intro-focus-offset");
+});
+if (visualViewport) {
+  visualViewport.addEventListener("resize", scheduleIntroPosition, { passive: true });
+  visualViewport.addEventListener("scroll", scheduleIntroPosition, { passive: true });
+}
+window.addEventListener("scroll", scheduleIntroPosition, { passive: true });
+window.addEventListener("resize", scheduleIntroPosition, { passive: true });
 
 form.addEventListener("submit", event => {
   event.preventDefault();
