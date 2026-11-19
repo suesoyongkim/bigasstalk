@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <title>Bigass flow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <main class="page">
+    <section class="roster intro" id="intro" aria-label="이름 입력">
+      <header class="bar bar--title">Bigass flow</header>
+      <div class="intro-body">
+        <p class="intro-heading">이름을 입력하세요.</p>
+        <form id="name-form" class="name-form" autocomplete="off">
+          <label class="sr-only" for="visitor-name">이름</label>
+          <input id="visitor-name" type="text" name="name" maxlength="25" placeholder="이름" required enterkeyhint="go" autocomplete="off">
+          <button type="submit">확인</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="roster result" id="result" aria-label="Bigass flow 참여자 명단" hidden>
+      <header class="bar bar--title">Bigass flow</header>
+      <div class="team-headers">
+        <div class="bar team-title" id="my-team-title"></div>
+        <div class="bar team-title">빅애스 진영</div>
+      </div>
+      <div class="team-intros">
+        <div class="team-cell team-cell--left" id="my-team-name"></div>
+        <div class="team-cell team-cell--right" id="leaders"></div>
+      </div>
+      <div class="bar bar--section">지지 의사</div>
+      <div class="support-columns">
+        <div class="support-empty" aria-hidden="true"></div>
+        <div class="support-right">
+          <button class="toggle" type="button" id="support-toggle" aria-expanded="true" aria-controls="support-list">[ 펼치기 · 접기 ]</button>
+          <div class="support-list" id="support-list" aria-label="빅애스 진영 지지자"></div>
+        </div>
+      </div>
+      <div class="footnote-list" id="footnotes" aria-label="각주 모음"></div>
+      <footer class="credits">suesoyongkim2026</footer>
+    </section>
+  </main>
+  <div id="footnote-popup" class="footnote-popup" role="tooltip" hidden></div>
+  <!-- Place a legally usable music1.mp3 file in the same folder as this HTML. -->
+  <audio id="bg-music" src="music1.mp3" preload="auto" loop></audio>
+</body>
+</html>

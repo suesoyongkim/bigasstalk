@@ -1,0 +1,93 @@
+/* Bigass flow — white / black / Namuwiki blue */
+:root { color-scheme: light; --blue: #0275d8; --line: #e3e3e3; font-family: "Noto Sans KR", sans-serif; }
+* { box-sizing: border-box; }
+html { min-width: 280px; }
+body { margin: 0; color: var(--blue); background: #fff; font-family: "Noto Sans KR", sans-serif; -webkit-font-smoothing: antialiased; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+[hidden] { display: none !important; }
+.page { width: min(calc(100% - 28px), 360px); margin-inline: auto; }
+body:not(.has-result) .page { min-height: 100svh; display: flex; align-items: center; }
+.roster { width: 100%; border-left: 1px solid #111; border-right: 1px solid #111; border-bottom: 1px solid #111; }
+.bar { color: #fff; background: #000; text-align: center; font-weight: 700; }
+.bar--title { display: flex; align-items: center; justify-content: center; min-height: 24px; padding: 2px; border-bottom: 1px solid #fff; font-size: 12px; line-height: 1.4; }
+.team-headers, .team-intros, .support-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.team-title { display: flex; align-items: center; justify-content: center; padding: 3px 4px; min-width: 0; min-height: 25px; font-size: 11.5px; line-height: 1.5; overflow-wrap: anywhere; }
+.team-title + .team-title { border-left: 1px solid #555; }
+.team-intros { min-height: 111px; border-bottom: 1px solid #aaa; }
+.team-cell { padding: 5px 4px 7px; text-align: center; min-width: 0; font-size: 11.5px; line-height: 1.65; overflow-wrap: anywhere; font-weight: 500; }
+.team-cell--left { border-right: 1px solid var(--line); font-weight: 700; }
+.main-person { font-weight: 700; }
+.person { display: block; margin: 0; padding: 0; line-height: 1.65; }
+.person--bold { font-weight: 700; }
+.note-ref { color: var(--blue); font: inherit; font-weight: inherit; line-height: inherit; vertical-align: baseline; text-decoration: none; white-space: nowrap; cursor: pointer; }
+.note-ref:hover, .note-ref:focus-visible { text-decoration: underline; text-underline-offset: 2px; }
+.bar--section { min-height: 25px; padding: 3px 5px; font-size: 12px; line-height: 1.55; }
+.support-columns { align-items: stretch; }
+.support-empty { border-right: 1px solid var(--line); }
+.support-right { min-width: 0; padding: 0 4px 10px; text-align: center; }
+.toggle { display: block; margin: 0; padding: 6px 1px 3px; width: 100%; background: none; color: #000; border: 0; border-radius: 0; font-size: 12px; font-weight: 700; line-height: 1.55; }
+.support-list { font-weight: 500; min-width: 0; font-size: 11.5px; line-height: 1.65; overflow-wrap: anywhere; }
+.support-list .person { line-height: inherit; }
+.footnote-list { border-top: 1px solid #aaa; padding: 9px 8px 13px; color: var(--blue); font-size: 11px; line-height: 1.65; overflow-wrap: anywhere; }
+.footnote { margin: 0; padding: 0; line-height: 1.65; scroll-margin-top: 18px; }
+.footnote-index { color: var(--blue); font: inherit; font-weight: inherit; text-decoration: none; white-space: nowrap; }
+.footnote-index:hover, .footnote-index:focus-visible { text-decoration: underline; text-underline-offset: 2px; }
+.note-ref { scroll-margin-top: 18px; }
+.credits { padding: 8px; border-top: 1px solid var(--line); text-align: center; font-size: 10px; line-height: 1.55; color: var(--blue); }
+.intro-body { padding: 42px 24px; text-align: center; color: #111; }
+.intro-heading { font-size: 13px; font-weight: 700; margin: 0 0 18px; }
+.name-form { display: flex; flex-direction: column; gap: 9px; }
+.name-form input { width: 100%; height: 42px; padding: 0 13px; border: 1px solid #aaa; border-radius: 0; outline-offset: 1px; background: #fff; font-size: 13px; color: #111; }
+.name-form input::placeholder { color: #555; opacity: 1; }
+.name-form input:focus { border-color: #111; outline: 1px solid #111; }
+.name-form button { width: 100%; height: 40px; padding: 0; border: 0; border-radius: 0; font-size: 13px; font-weight: 700; background: #000; color: #fff; }
+.name-form button:hover { background: #222; }
+button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 390px) {
+  .page { width: calc(100% - 20px); }
+  .team-title { font-size: 11px; }
+  .team-cell, .support-list { font-size: 11px; }
+}
+
+/* Hover preview follows Namuwiki-style footnotes. Click still jumps to its entry. */
+.footnote-popup {
+  position: fixed;
+  z-index: 1000;
+  width: max-content;
+  max-width: min(460px, calc(100vw - 24px));
+  padding: 12px 14px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: #fff;
+  color: #222;
+  box-shadow: 0 2px 7px rgb(0 0 0 / 18%);
+  font-family: "Noto Sans KR", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  text-align: left;
+  pointer-events: none;
+}
+.footnote-popup::after {
+  content: "";
+  position: absolute;
+  left: var(--popup-arrow-x, 50%);
+  width: 9px;
+  height: 9px;
+  background: #fff;
+  transform: translateX(-50%) rotate(45deg);
+}
+.footnote-popup[data-placement="top"]::after {
+  bottom: -5px;
+  border-right: 1px solid #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
+}
+.footnote-popup[data-placement="bottom"]::after {
+  top: -5px;
+  border-left: 1px solid #d0d0d0;
+  border-top: 1px solid #d0d0d0;
+}
+.footnote-popup .popup-number { color: var(--blue); font: inherit; font-weight: inherit; }
