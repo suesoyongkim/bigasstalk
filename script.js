@@ -425,7 +425,7 @@ const form = document.getElementById("name-form");
 const audio = document.getElementById("bg-music");
 const musicStart = 88; // 1 minute 28 seconds
 const fadeDuration = 3200; // 3.2 seconds
-const musicVolume = 0.72; // a little quieter, including on mobile
+const musicVolume = 0.48; // lower overall playback level on mobile and desktop
 let fadeFrame = null;
 let musicFadeStarted = false;
 
