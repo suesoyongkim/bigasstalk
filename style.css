@@ -10,7 +10,7 @@ button { cursor: pointer; }
 body:not(.has-result) .page { min-height: 100svh; display: flex; align-items: center; }
 .roster { width: 100%; border-left: 1px solid #111; border-right: 1px solid #111; border-bottom: 1px solid #111; }
 .bar { color: #fff; background: #000; text-align: center; font-weight: 700; }
-.bar--title { display: flex; align-items: center; justify-content: center; min-height: 24px; padding: 2px; border-bottom: 1px solid #fff; font-size: 12px; line-height: 1.4; }
+.bar--title { display: flex; align-items: center; justify-content: center; min-height: 28px; padding: 5px 3px; border-bottom: 1px solid #fff; font-size: 12px; line-height: 1.4; }
 .team-headers, .team-intros, .support-columns { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .team-title { display: flex; align-items: center; justify-content: center; padding: 3px 4px; min-width: 0; min-height: 25px; font-size: 11.5px; line-height: 1.5; overflow-wrap: anywhere; }
 .team-title + .team-title { border-left: 1px solid #555; }
@@ -30,7 +30,8 @@ body:not(.has-result) .page { min-height: 100svh; display: flex; align-items: ce
 .support-list { font-weight: 500; min-width: 0; font-size: 11.5px; line-height: 1.65; overflow-wrap: anywhere; }
 .support-list .person { line-height: inherit; }
 .footnote-list { border-top: 1px solid #aaa; padding: 9px 8px 13px; color: #111; font-size: 11px; line-height: 1.65; overflow-wrap: anywhere; }
-.footnote { margin: 0; padding: 0; line-height: 1.65; scroll-margin-top: 18px; }
+.footnote { margin: 0; padding: 0; line-height: 1.65; scroll-margin-top: 18px; color: #111; }
+.footnote-text { color: #111; }
 .footnote-index { color: var(--blue); font: inherit; font-weight: inherit; text-decoration: none; white-space: nowrap; }
 .footnote-index:hover, .footnote-index:focus-visible { text-decoration: underline; text-underline-offset: 2px; }
 .note-ref { scroll-margin-top: 18px; }
@@ -91,6 +92,7 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   border-top: 1px solid #d0d0d0;
 }
 .footnote-popup .popup-number { color: var(--blue); font: inherit; font-weight: inherit; }
+.footnote-popup .popup-text { color: #111; }
 
 /* Mobile: 16px stops Safari's automatic input-focus zoom without blocking pinch zoom. */
 @media (max-width: 600px) {
@@ -123,10 +125,13 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   }
 }
 
-/* Mobile intro: anchor the form to the stable layout viewport.
-   Keeping the input in the upper safe zone prevents Safari from moving the
-   page to reveal an input hidden behind the virtual keyboard. */
+/* Mobile intro: fixed layout anchored above the keyboard; no focus-based
+   translation, no viewport height recalculation when the keyboard opens. */
 @media (max-width: 600px) {
+  html:has(body:not(.has-result)) {
+    overflow: hidden;
+    height: 100%;
+  }
   body:not(.has-result) {
     position: fixed;
     inset: 0;
@@ -147,8 +152,6 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
     top: clamp(44px, 12svh, 86px);
     left: 0;
     right: 0;
-    transform: translate3d(0, var(--intro-focus-offset, 0px), 0);
-    will-change: transform;
   }
   .intro-body {
     padding: 22px 18px;

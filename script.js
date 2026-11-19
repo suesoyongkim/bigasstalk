@@ -125,7 +125,7 @@ const supporters = [
   [
     [
       "우슬랑이",
-      "미안, 그냥 끼고 싶어. 서영이랑 같은 종"
+      "미안, 그냥 끼고 싶어"
     ],
     [
       "샤이보이",
@@ -390,7 +390,10 @@ function noteLine(entry, number) {
   label.href = `#note-ref-${number}`;
   label.textContent = `[${number}]`;
   label.setAttribute("aria-label", `각주 ${number}번의 본문 위치로 돌아가기`);
-  note.append(label, document.createTextNode(` ${entry[1]}`));
+  const prose = document.createElement("span");
+  prose.className = "footnote-text";
+  prose.textContent = ` ${entry[1]}`;
+  note.append(label, prose);
   return note;
 }
 
@@ -422,99 +425,19 @@ function buildRoster() {
 const intro = document.getElementById("intro");
 const result = document.getElementById("result");
 const form = document.getElementById("name-form");
-const audio = document.getElementById("bg-music");
-const musicStart = 88; // 1 minute 28 seconds
-const fadeDuration = 3200; // 3.2 seconds
-const musicVolume = 0.30; // target playback volume, desktop and mobile
-let fadeFrame = null;
-let musicFadeStarted = false;
-
-function startFadeIn() {
-  if (musicFadeStarted) return;
-  musicFadeStarted = true;
-  audio.volume = 0;
-  const began = performance.now();
-  const fade = now => {
-    const t = Math.min((now - began) / fadeDuration, 1);
-    // Gentle ramp, rather than an abrupt jump in volume.
-    audio.volume = musicVolume * (t * t * (3 - 2 * t));
-    if (t < 1 && !audio.paused) fadeFrame = requestAnimationFrame(fade);
-  };
-  fadeFrame = requestAnimationFrame(fade);
-}
-
-function playMusicFromStartPoint() {
-  // Must call play() in the same click/submit gesture for mobile autoplay rules.
-  audio.volume = 0;
-  const seekAndFade = () => {
-    if (!Number.isFinite(audio.duration) || audio.duration > musicStart) {
-      try { audio.currentTime = musicStart; } catch (_) {}
-    }
-    if (audio.currentTime >= musicStart - 0.5) startFadeIn();
-    else audio.addEventListener("seeked", startFadeIn, { once: true });
-  };
-  if (audio.readyState >= HTMLMediaElement.HAVE_METADATA) seekAndFade();
-  else audio.addEventListener("loadedmetadata", seekAndFade, { once: true });
-
-  const promise = audio.play();
-  if (promise) promise.catch(() => {
-    // No music file or browser policy: allow the rest of the site to work normally.
-  });
-}
-
 buildRoster();
 
-// iOS Safari may pan the visual viewport when focusing a text field, even when
-// the body is fixed. Keep the intro at its pre-focus on-screen position by
-// compensating for visual-viewport panning (not by disabling user zoom).
+// The mobile intro stays anchored in CSS to the small viewport's top safe area.
+// Do not move it in response to visualViewport resize/scroll: compensating for
+// Safari keyboard movement was itself shifting the form upward on focus.
 const nameInput = document.getElementById("visitor-name");
-const visualViewport = window.visualViewport;
-let introAnchorY = null;
-let introCompensation = 0;
-let introRepositionFrame = null;
-
-function introScreenTop() {
-  return intro.getBoundingClientRect().top - (visualViewport?.offsetTop || 0);
-}
-
-function captureIntroPosition() {
-  if (result.hidden && introAnchorY === null) {
-    introAnchorY = introScreenTop();
-  }
-}
-
-function holdIntroPosition() {
-  introRepositionFrame = null;
-  if (document.activeElement !== nameInput || introAnchorY === null || !result.hidden) return;
-  const difference = introAnchorY - introScreenTop();
-  if (Math.abs(difference) < 0.5) return;
-  introCompensation = Math.max(-400, Math.min(400, introCompensation + difference));
-  intro.style.setProperty("--intro-focus-offset", `${introCompensation}px`);
-}
-
-function scheduleIntroPosition() {
-  if (introRepositionFrame === null) {
-    introRepositionFrame = requestAnimationFrame(holdIntroPosition);
-  }
-}
-
-nameInput.addEventListener("pointerdown", captureIntroPosition, { passive: true });
-nameInput.addEventListener("touchstart", captureIntroPosition, { passive: true });
-nameInput.addEventListener("focus", () => {
-  captureIntroPosition();
-  scheduleIntroPosition();
+// Prevent the browser from scrolling the fixed intro into view on touch focus.
+// This does not disable touch zoom and still leaves native keyboard handling.
+nameInput.addEventListener("pointerdown", event => {
+  if (event.pointerType !== "touch" || document.activeElement === nameInput) return;
+  event.preventDefault();
+  nameInput.focus({ preventScroll: true });
 });
-nameInput.addEventListener("blur", () => {
-  introAnchorY = null;
-  introCompensation = 0;
-  intro.style.removeProperty("--intro-focus-offset");
-});
-if (visualViewport) {
-  visualViewport.addEventListener("resize", scheduleIntroPosition, { passive: true });
-  visualViewport.addEventListener("scroll", scheduleIntroPosition, { passive: true });
-}
-window.addEventListener("scroll", scheduleIntroPosition, { passive: true });
-window.addEventListener("resize", scheduleIntroPosition, { passive: true });
 
 form.addEventListener("submit", event => {
   event.preventDefault();
@@ -523,7 +446,6 @@ form.addEventListener("submit", event => {
   if (!name) { input.focus(); return; }
   document.getElementById("my-team-title").textContent = `${name} 진영`;
   document.getElementById("my-team-name").textContent = name;
-  playMusicFromStartPoint();
   input.blur(); // dismiss the mobile keyboard before displaying the roster
   intro.hidden = true;
   result.hidden = false;
@@ -581,7 +503,10 @@ function showFootnote(ref) {
     num.href = `#footnote-${number}`;
     num.setAttribute("aria-label", `각주 ${number}번 위치로 이동`);
   }
-  popup.append(num, document.createTextNode(` ${entry[1]}`));
+  const prose = document.createElement("span");
+  prose.className = "popup-text";
+  prose.textContent = ` ${entry[1]}`;
+  popup.append(num, prose);
   popup.setAttribute("role", isTouchUI() ? "dialog" : "tooltip");
   popup.setAttribute("aria-label", `각주 ${number}번`);
   popup.hidden = false;
