@@ -91,3 +91,32 @@ button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
   border-top: 1px solid #d0d0d0;
 }
 .footnote-popup .popup-number { color: var(--blue); font: inherit; font-weight: inherit; }
+
+/* Mobile: 16px stops Safari's automatic input-focus zoom without blocking pinch zoom. */
+@media (max-width: 600px) {
+  .name-form input {
+    font-size: 16px;
+    height: 48px;
+    line-height: normal;
+    touch-action: manipulation;
+  }
+  .name-form button { min-height: 44px; touch-action: manipulation; }
+  .footnote-popup {
+    font-size: 13px;
+    max-width: calc(100vw - 24px);
+    max-height: min(65svh, 360px);
+    overflow-y: auto;
+  }
+}
+
+/* Make the footnote number inside a touch preview an actual jump target. */
+@media (hover: none), (pointer: coarse) {
+  .footnote-popup { pointer-events: auto; }
+  .footnote-popup .popup-number[href] {
+    color: var(--blue);
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+}

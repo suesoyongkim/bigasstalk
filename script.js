@@ -425,6 +425,7 @@ const form = document.getElementById("name-form");
 const audio = document.getElementById("bg-music");
 const musicStart = 88; // 1 minute 28 seconds
 const fadeDuration = 3200; // 3.2 seconds
+const musicVolume = 0.72; // a little quieter, including on mobile
 let fadeFrame = null;
 let musicFadeStarted = false;
 
@@ -436,7 +437,7 @@ function startFadeIn() {
   const fade = now => {
     const t = Math.min((now - began) / fadeDuration, 1);
     // Gentle ramp, rather than an abrupt jump in volume.
-    audio.volume = Math.min(1, t * t * (3 - 2 * t));
+    audio.volume = musicVolume * (t * t * (3 - 2 * t));
     if (t < 1 && !audio.paused) fadeFrame = requestAnimationFrame(fade);
   };
   fadeFrame = requestAnimationFrame(fade);
@@ -471,6 +472,7 @@ form.addEventListener("submit", event => {
   document.getElementById("my-team-title").textContent = `${name} 진영`;
   document.getElementById("my-team-name").textContent = name;
   playMusicFromStartPoint();
+  input.blur(); // dismiss the mobile keyboard before displaying the roster
   intro.hidden = true;
   result.hidden = false;
   document.body.classList.add("has-result");
@@ -486,10 +488,18 @@ toggle.addEventListener("click", () => {
   list.hidden = !expanded;
 });
 
-// Tooltip on hover/focus; clicking/tapping the number follows the in-page anchor.
+// Desktop: hover/focus previews, click jumps to the matching footnote.
+// Touch devices: first tap previews the note, second tap jumps to the note.
+// The number in the mobile preview can also be tapped to jump immediately.
 const footnoteEntries = [...leaders, ...supporters.flat()];
 const popup = document.getElementById("footnote-popup");
 let activeReference = null;
+let lastPointerWasTouch = false;
+const isTouchUI = () => lastPointerWasTouch || matchMedia("(hover: none) and (pointer: coarse)").matches;
+
+document.getElementById("result").addEventListener("pointerdown", event => {
+  lastPointerWasTouch = event.pointerType === "touch";
+}, { passive: true });
 
 function positionPopup(ref) {
   if (!ref || popup.hidden) return;
@@ -505,56 +515,77 @@ function positionPopup(ref) {
   const arrowX = Math.max(10, Math.min(rect.width - 10, anchor.left + anchor.width / 2 - x));
   popup.style.setProperty("--popup-arrow-x", `${arrowX}px`);
 }
+
 function showFootnote(ref) {
   const number = Number(ref.dataset.number);
   const entry = footnoteEntries[number - 1];
   if (!entry) return;
   activeReference = ref;
   popup.replaceChildren();
-  const num = document.createElement("span");
+  const num = document.createElement(isTouchUI() ? "a" : "span");
   num.className = "popup-number";
-  num.textContent = `[${number}] `;
-  popup.append(num, document.createTextNode(entry[1]));
+  num.textContent = `[${number}]`;
+  if (num.tagName === "A") {
+    num.href = `#footnote-${number}`;
+    num.setAttribute("aria-label", `각주 ${number}번 위치로 이동`);
+  }
+  popup.append(num, document.createTextNode(` ${entry[1]}`));
+  popup.setAttribute("role", isTouchUI() ? "dialog" : "tooltip");
+  popup.setAttribute("aria-label", `각주 ${number}번`);
   popup.hidden = false;
   positionPopup(ref);
 }
+
 function hideFootnote() {
   popup.hidden = true;
   activeReference = null;
 }
-// Delegation also works for all programmatically constructed names.
-document.getElementById("result").addEventListener("mouseover", (event) => {
+
+const resultBox = document.getElementById("result");
+resultBox.addEventListener("mouseover", event => {
+  if (isTouchUI()) return; // mobile browsers may synthesize mouseover for a tap
   const ref = event.target.closest?.(".note-ref");
   if (ref && ref !== activeReference) showFootnote(ref);
 });
-document.getElementById("result").addEventListener("mouseout", (event) => {
+resultBox.addEventListener("mouseout", event => {
+  if (isTouchUI()) return;
   const ref = event.target.closest?.(".note-ref");
   if (ref && !ref.contains(event.relatedTarget)) hideFootnote();
 });
-document.getElementById("result").addEventListener("focusin", (event) => {
+resultBox.addEventListener("focusin", event => {
+  if (isTouchUI()) return;
   const ref = event.target.closest?.(".note-ref");
   if (ref) showFootnote(ref);
 });
-document.getElementById("result").addEventListener("focusout", (event) => {
+resultBox.addEventListener("focusout", event => {
+  if (isTouchUI()) return;
   if (event.target.closest?.(".note-ref")) hideFootnote();
 });
-document.getElementById("result").addEventListener("click", (event) => {
+
+resultBox.addEventListener("click", event => {
   const ref = event.target.closest?.(".note-ref");
   if (!ref) return;
+  if (isTouchUI() && (popup.hidden || activeReference !== ref)) {
+    event.preventDefault(); // first tap opens the Namuwiki-style preview
+    showFootnote(ref);
+    return;
+  }
+  // Desktop click, or second tap on the same number, follows the existing # link.
   hideFootnote();
   const target = document.getElementById(`footnote-${ref.dataset.number}`);
-  if (target) {
-    // Native hash links provide navigation even without JavaScript handling.
-    requestAnimationFrame(() => target.focus({ preventScroll: true }));
-  }
+  if (target) requestAnimationFrame(() => target.focus({ preventScroll: true }));
 });
-// Clicking a footnote index returns to its original number in the roster.
-document.getElementById("footnotes").addEventListener("click", (event) => {
+
+popup.addEventListener("click", event => {
+  if (event.target.closest?.(".popup-number[href]")) hideFootnote();
+});
+
+// The number at the footnote's end returns to its original reference in the roster.
+document.getElementById("footnotes").addEventListener("click", event => {
   const backLink = event.target.closest?.(".footnote-index");
   if (!backLink) return;
   const target = document.getElementById(backLink.hash.slice(1));
   if (!target) return;
-  // Make the referenced name visible if the supporter list was collapsed.
   if (list.contains(target) && list.hidden) {
     list.hidden = false;
     toggle.setAttribute("aria-expanded", "true");
@@ -562,6 +593,13 @@ document.getElementById("footnotes").addEventListener("click", (event) => {
   }
   hideFootnote();
 });
+
+// Tapping away, scrolling, or pressing Escape closes the preview.
+document.addEventListener("click", event => {
+  if (!event.target.closest?.(".note-ref, .footnote-popup")) hideFootnote();
+});
 window.addEventListener("scroll", hideFootnote, { passive: true });
 window.addEventListener("resize", () => { if (activeReference) positionPopup(activeReference); });
-document.addEventListener("keydown", (event) => { if (event.key === "Escape") hideFootnote(); });
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") hideFootnote();
+});
